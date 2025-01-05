@@ -1,0 +1,6 @@
+__pycache__
+lastfmAPI.txt
+*.webp
+.venv
+.env
+*.json
