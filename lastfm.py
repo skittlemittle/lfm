@@ -1,13 +1,10 @@
 """
 lastfm API handling
 """
-import os
-from dotenv import load_dotenv
 import requests
 import json
 
-load_dotenv()
-endpoint = "https://ws.audioscrobbler.com/2.0/?"
+_endpoint = "https://ws.audioscrobbler.com/2.0/?"
 
 def make_url_params(user, key):
     def aux(params):
@@ -17,7 +14,7 @@ def make_url_params(user, key):
 
 def get_top_albums(period, limit, url):
     params = url(f"method=user.gettopalbums&period={period}&limit={limit}")
-    res = requests.get(endpoint+params)
+    res = requests.get(_endpoint+params)
     data = None
 
     if (res.status_code == 200):
@@ -30,7 +27,7 @@ def get_top_albums(period, limit, url):
 # to get the images one by one
 def get_weekly_chart(url):
     params = url(f"method=user.getweeklyalbumchart")
-    res = requests.get(endpoint+params)
+    res = requests.get(_endpoint+params)
     data = None
 
     if (res.status_code == 200):
@@ -38,6 +35,21 @@ def get_weekly_chart(url):
     
     return (data, res.status_code)
 
+def get_weekly_imgs(chart, url):
+    """
+    Fetches the image url for each album in the weekly
+    chart
+    """
+    urls = []
+    for album in chart["weeklyalbumchart"]["album"]:
+        params = url(f'method=album.getinfo&mbid={album["mbid"]}')
+        res = requests.get(_endpoint+params)
+        # ignoring failed reqs
+        if (res.status_code == 200):
+            data = json.loads(res.text)
+            urls.append(data["album"]["image"][0]["#text"])
+
+    return urls
 
 def extract_img_urls(data, size=0):
     """
@@ -52,7 +64,5 @@ def extract_img_urls(data, size=0):
     return urls
 
 
-# TODO: move this and all env stuff to main.py
-url = make_url_params("scringly", os.getenv('LASTFM_API_KEY'))
 #print(get_top_albums("7day",3,url))
 #print(get_weekly_chart(url))
