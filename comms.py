@@ -18,7 +18,7 @@ def connect(device):
     return ser
 
 
-def parse_response(res, split = '\r\n', filt = 'DEBUG:'):
+def parse_response(res, split = b'\r\n', filt = b'DEBUG:'):
     '''
     removes debug messages and extracts the
     actual response message
@@ -26,38 +26,57 @@ def parse_response(res, split = '\r\n', filt = 'DEBUG:'):
     split: char sequence to split response message with
     filt: filter out lines that contain this substring
     '''
-    lines = res.decode("utf-8").split(split)
-    ret = [l for l in lines if (not filt in l) and l != '']
+    lines = res.split(split)
+    ret = [l for l in lines if (not filt in l) and l != b'']
     return ret
 
 
 def send_albums(albums, ser):
-    if ser == None:
+    """
+    albums: zip of (scrobbles, [colors])
+            max 50 elements
+    """
+    if ser == None or albums == None:
         return 1
 
     while (True):
         ser.write(b'f\n')
         time.sleep(.5)
-        res = parse_response(ser.read(ser.in_waiting))
+        res = parse_response(ser.read(ser.in_waiting), filt=b'')
         print(res)
-        if len(res) > 0 and res[0] == "f":
+        if len(res) > 0 and res[0] == b'f':
             break
 
-    scrobbles = 16
-    scrobbles = scrobbles.to_bytes(2, byteorder="big")
-    msg = bytearray()
-    msg.extend(scrobbles)
-    msg.extend("5".encode()) # the palletlen
-    msg.extend("cowrathopgaplip".encode()) # 5 sets of RGB bytes
-    ser.write(msg)
+    for album in albums:
+        print("A: ", album[0], album[1])
+
+        scrobbles = album[0]
+        scrobbles = scrobbles.to_bytes(2, byteorder="big")
+        palletlen = str(len(album[1]))
+        # flatten + to bytes
+        colors = [x.to_bytes(1, byteorder="big")
+                  for xs in album[1] for x in xs]
 
 
-    # ready to recv now
-    # send album data
-    # ser.read(ser.in_waiting)
-    # split string at \r\n
-    # drop DEBUG: lines
-    # parse the ACK line
-    # repeat
+        msg = bytearray()
+        msg.extend(scrobbles)
+        msg.extend(palletlen.encode())
+#        msg.extend("cowrathopgaplip".encode()) # 5 sets of RGB bytes
+        for byte in colors:
+            msg.extend(byte)
 
+        msg.extend('\n'.encode())
+        ser.write(msg)
 
+        print("msglen: ", len(msg))
+
+        time.sleep(.5)
+        print("Sending: ", msg)
+        res = parse_response(ser.read(ser.in_waiting), filt=b"")
+        print("RES: ", res)
+        time.sleep(.5)
+
+    ser.write(b'e\b')
+    time.sleep(.5)
+    res = parse_response(ser.read(ser.in_waiting), filt=b"")
+    print("closer: ", res)

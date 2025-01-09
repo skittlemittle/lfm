@@ -131,14 +131,22 @@ void drop_till_nextline() {
 /** fill the rectangle defined by sx,sy,ex,ey with color */
 void fill_color(CRGB color, uint8_t sx, uint8_t sy, uint8_t ex, uint8_t ey)
 {
-  for (int y = sy; y < ey; y++) {
-    for (int x = sx; x < ex; x++)
+  for (int y = sy; y <= ey; y++) {
+    for (int x = sx; x <= ex; x++)
       leds[XYsafe(x,y)] = color;
   }
 }
 
+void show_empty()
+{
+  fill_color(CRGB::Red, 2, 2, 5, 5);
+  delay(50);
+  FastLED.show();
+}
+
 void loop()
 {
+  static int have_albums = 0;
   //TODO: should use serialevent
   if (Serial.available()) {
     char b = Serial.read();
@@ -146,23 +154,48 @@ void loop()
       drop_till_nextline();
 
       int r = read_top_albums(topalbums, MAX_ALBUMS);
+      if (r == 0) have_albums = 1;
       Serial.print("read returned ");
       Serial.println(r);
     } else {
       Serial.print('r');
     }
   }
-  // do the animations
-/*
-  char cmdbuffer[30] = {0};
-  if (parse_cmd(cmdbuffer, 30) != 0) return;
 
-  fill_color(CRGB(cmdbuffer[0],cmdbuffer[1],cmdbuffer[2])
-        , 1,3,4,6);
+  if (!have_albums) {
+    show_empty();
+    return;
+  }
 
-  delay(500);
-  FastLED.show();
-*/
+  // show a sequence of 2x2 tiles of the first color in each pallet
+  for (int i = 0; i < MAX_ALBUMS; i += 4) {
+    if (topalbums[i].scrobbles <= 0) break;
+    fill_color(CRGB(
+      topalbums[i].colors[0],
+      topalbums[i].colors[1],
+      topalbums[i].colors[2]),
+      0,0,3,3
+    );
+    fill_color(CRGB(
+      topalbums[i+1].colors[0],
+      topalbums[i+1].colors[1],
+      topalbums[i+1].colors[2]),
+      4,0,7,3
+    );
+    fill_color(CRGB(
+      topalbums[i+2].colors[0],
+      topalbums[i+2].colors[1],
+      topalbums[i+2].colors[2]),
+      0,4,3,7
+    );
+    fill_color(CRGB(
+      topalbums[i+3].colors[0],
+      topalbums[i+3].colors[1],
+      topalbums[i+3].colors[2]),
+      4,4,7,7);
+    delay(500);
+    FastLED.show();
+  }
 }
 
 void setup() {

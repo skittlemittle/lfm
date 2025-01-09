@@ -64,5 +64,6 @@ def extract_img_urls(data, size=0):
     return urls
 
 
+
 #print(get_top_albums("7day",3,url))
 #print(get_weekly_chart(url))
