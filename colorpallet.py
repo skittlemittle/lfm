@@ -1,6 +1,6 @@
 # get_dominant_colors by https://stackoverflow.com/a/61730849
 
-from PIL import Image
+from PIL import Image, ImageEnhance
 import requests
 
 
@@ -27,8 +27,14 @@ def _get_dominant_colors(pil_img, palette_size=16, num_colors=10):
 def compute_pallet(img_url, num_colors=6):
     res = requests.get(img_url ,stream=True).raw
     im = Image.open(res)
-    
-    return _get_dominant_colors(im, num_colors=num_colors)
+
+    # consider reducing pallet with .quantize
+    # but explicitly set a pallet that looks
+    # good on the LEDs
+    boost_saturation = ImageEnhance.Color(im)
+
+    img = boost_saturation.enhance(1.6)
+    return _get_dominant_colors(img, num_colors=num_colors)
 
 
 #print(compute_pallet(

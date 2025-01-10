@@ -70,5 +70,4 @@ def test(p):
         scrobbles = [int(album["playcount"]) for album in data["topalbums"]["album"]]
        
         ret = zip(scrobbles, colors)
-
         main(p, ret)

@@ -25,10 +25,13 @@ def parse_response(res, split = b'\r\n', filt = b'DEBUG:'):
     res: the response to parse
     split: char sequence to split response message with
     filt: filter out lines that contain this substring
+        pass an empty string to disable filtering
     '''
     lines = res.split(split)
-    ret = [l for l in lines if (not filt in l) and l != b'']
-    return ret
+    if filt != b'':
+        return [l for l in lines if (not filt in l) and l != b'']
+
+    return [l for l in lines if l!= b'']
 
 
 def send_albums(albums, ser):
@@ -42,6 +45,7 @@ def send_albums(albums, ser):
     while (True):
         ser.write(b'f\n')
         time.sleep(.5)
+        # empty filt problem
         res = parse_response(ser.read(ser.in_waiting), filt=b'')
         print(res)
         if len(res) > 0 and res[0] == b'f':
@@ -72,11 +76,11 @@ def send_albums(albums, ser):
 
         time.sleep(.5)
         print("Sending: ", msg)
-        res = parse_response(ser.read(ser.in_waiting), filt=b"")
+        res = parse_response(ser.read(ser.in_waiting), filt=b'')
         print("RES: ", res)
         time.sleep(.5)
 
     ser.write(b'e\b')
     time.sleep(.5)
-    res = parse_response(ser.read(ser.in_waiting), filt=b"")
+    res = parse_response(ser.read(ser.in_waiting), filt=b'')
     print("closer: ", res)
