@@ -26,7 +26,7 @@ def _get_dominant_colors(pil_img, palette_size=16, num_colors=10):
 
 def compute_pallet(img_url, num_colors=6):
     res = requests.get(img_url ,stream=True).raw
-    im = Image.open(res)
+    im = Image.open(res).convert("RGB")
 
     # consider reducing pallet with .quantize
     # but explicitly set a pallet that looks
