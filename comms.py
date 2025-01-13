@@ -69,7 +69,6 @@ def send_albums(albums, ser):
         for byte in colors:
             msg.extend(byte)
 
-        msg.extend('\n'.encode())
         ser.write(msg)
 
         print("msglen: ", len(msg))
@@ -80,7 +79,28 @@ def send_albums(albums, ser):
         print("RES: ", res)
         time.sleep(.5)
 
-    ser.write(b'e\b')
+    ser.write(b'e\n')
     time.sleep(.5)
     res = parse_response(ser.read(ser.in_waiting), filt=b'')
     print("closer: ", res)
+
+
+def check_on_arduino(ser):
+    """
+    sends a status check message to the arduino and reads its response
+    returns 0 if the arduino returned an OK message
+    returns 1 if the arduino returned a "need album data"
+        message
+    returns -1 if the arduino returned nothing
+    """
+    ser.write(b'c\n')
+    time.sleep(.5)
+    res = parse_response(ser.read(ser.in_waiting), filt=b'')
+
+    if len(res) <= 0:
+        return -1
+
+    if (res[0] == b'c'):
+        return 0
+    if (res[0] == b'n'):
+        return 1
