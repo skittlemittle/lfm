@@ -157,6 +157,13 @@ void loop()
       if (r == 0) have_albums = 1;
       Serial.print("read returned ");
       Serial.println(r);
+    } else if (b == 'c') {
+      if (have_albums)
+        Serial.println('c');
+      else
+        Serial.println('n');
+
+      drop_till_nextline();
     } else {
       Serial.print('r');
     }
