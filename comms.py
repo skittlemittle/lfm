@@ -65,7 +65,6 @@ def send_albums(albums, ser):
         msg = bytearray()
         msg.extend(scrobbles)
         msg.extend(palletlen.encode())
-#        msg.extend("cowrathopgaplip".encode()) # 5 sets of RGB bytes
         for byte in colors:
             msg.extend(byte)
 

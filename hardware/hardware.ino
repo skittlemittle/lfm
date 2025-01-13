@@ -71,7 +71,7 @@ int read_top_albums(struct album albums[], size_t len)
 {
   Serial.println("f"); // ACK
   struct album albm;
-  int buflen = sizeof(albm); // sizeof(albums[0])
+  int buflen = sizeof(albm);
   char abuf[buflen] = {0};
 
   memset(albums, 0, MAX_ALBUMS);
@@ -91,7 +91,8 @@ int read_top_albums(struct album albums[], size_t len)
     }
 
     memset(abuf, 0, buflen);
-    int bytesread = Serial.readBytesUntil('\n', abuf, buflen);
+    // REPLACE WITH JUST READING UPTO 21 bytes
+    int bytesread = Serial.readBytes(abuf, buflen);
     if (bytesread <= 0) return 1;
 
     // interpret first 2 bytes as a uint16
