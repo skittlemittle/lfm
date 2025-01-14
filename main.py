@@ -10,14 +10,16 @@ load_dotenv()
 endpoint_url = lastfm.make_url_params("scringly", os.getenv('LASTFM_API_KEY'))
 
 parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", action="store_true"
+                    , help="increase output verbosity")
 parser.add_argument("chart", type=str, nargs=1
-                    ,help="the chart to fetch: weeker or top")
+                    ,help="the chart to fetch: topweek / topmonth/ weeker")
 parser.add_argument("--serial", type=str, const="", default="" , nargs="?"
                     ,help="specify a serial port to use")
 
 # ===============================================
-def top_albums(limit=50):
-    data = lastfm.get_top_albums("7day", limit, endpoint_url)
+def top_albums(period="7day", limit=50):
+    data = lastfm.get_top_albums(period, limit, endpoint_url)
     if data[1] != 200:
         return None
 
@@ -68,8 +70,10 @@ def main(testdata=None, overrideconnection=None):
         return
 
     if albums == None:
-        if args.chart[0] == "top":
+        if args.chart[0] == "topweek":
             albums = top_albums()
+        if args.chart[0] == "topmonth":
+            albums = top_albums("1month")
         elif args.chart[0] == "weeker":
             albums = weeker()
 
@@ -77,7 +81,7 @@ def main(testdata=None, overrideconnection=None):
         print(f"Failed to fetch top albums. errorcode: {albums}")
         return
 
-    comms.send_albums(albums, arduino)
+    comms.send_albums(albums, arduino, args.verbose)
 
 
 def test(p):

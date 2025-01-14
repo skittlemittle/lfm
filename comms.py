@@ -34,10 +34,12 @@ def parse_response(res, split = b'\r\n', filt = b'DEBUG:'):
     return [l for l in lines if l!= b'']
 
 
-def send_albums(albums, ser):
+def send_albums(albums, ser, verbose=False):
     """
     albums: zip of (scrobbles, [colors])
             max 50 elements
+    ser: seruial connection to use
+    verbose: enable extra logs
     """
     if ser == None or albums == None:
         return 1
@@ -47,13 +49,12 @@ def send_albums(albums, ser):
         time.sleep(.5)
         # empty filt problem
         res = parse_response(ser.read(ser.in_waiting), filt=b'')
-        print(res)
+        if verbose:
+            print(res)
         if len(res) > 0 and res[0] == b'f':
             break
 
     for album in albums:
-        print("A: ", album[0], album[1])
-
         scrobbles = album[0]
         scrobbles = scrobbles.to_bytes(2, byteorder="big")
         palletlen = str(len(album[1]))
@@ -70,12 +71,14 @@ def send_albums(albums, ser):
 
         ser.write(msg)
 
-        print("msglen: ", len(msg))
+        if verbose:
+            print("A: ", album[0], album[1])
+            print("msglen: ", len(msg))
+            print("Sending: ", msg)
 
         time.sleep(.5)
-        print("Sending: ", msg)
         res = parse_response(ser.read(ser.in_waiting), filt=b'')
-        print("RES: ", res)
+        print("RES: ", res if verbose else (res[0] if len(res) else "NOTHING"))
         time.sleep(.5)
 
     ser.write(b'e\n')
@@ -83,23 +86,3 @@ def send_albums(albums, ser):
     res = parse_response(ser.read(ser.in_waiting), filt=b'')
     print("closer: ", res)
 
-
-def check_on_arduino(ser):
-    """
-    sends a status check message to the arduino and reads its response
-    returns 0 if the arduino returned an OK message
-    returns 1 if the arduino returned a "need album data"
-        message
-    returns -1 if the arduino returned nothing
-    """
-    ser.write(b'c\n')
-    time.sleep(.5)
-    res = parse_response(ser.read(ser.in_waiting), filt=b'')
-
-    if len(res) <= 0:
-        return -1
-
-    if (res[0] == b'c'):
-        return 0
-    if (res[0] == b'n'):
-        return 1
