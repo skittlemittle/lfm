@@ -10,7 +10,6 @@ load_dotenv()
 endpoint_url = lastfm.make_url_params("scringly", os.getenv('LASTFM_API_KEY'))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--status", help="check arduino status", action="store_true")
 parser.add_argument("chart", type=str, nargs=1
                     ,help="the chart to fetch: weeker or top")
 parser.add_argument("--serial", type=str, const="", default="" , nargs="?"
@@ -59,7 +58,6 @@ def connect_arduino(port):
 def main(testdata=None, overrideconnection=None):
     args = parser.parse_args()
     arduino = overrideconnection if overrideconnection else connect_arduino(args.serial)
-    wants_albums = False
     albums = testdata
 
     import time
@@ -68,17 +66,6 @@ def main(testdata=None, overrideconnection=None):
     if not arduino:
         print("Arduino not connected")
         return
-
-    if args.status:
-        ar_status = comms.check_on_arduino(arduino)
-        print(ar_status)
-        if ar_status == -1:
-            # TODO: reset it and try again
-            print("Status Arduino unresponsive")
-        elif ar_status == 1:
-            wants_albums = True
-        elif ar_status == 0:
-            print("Status OK")
 
     if albums == None:
         if args.chart[0] == "top":
@@ -90,8 +77,7 @@ def main(testdata=None, overrideconnection=None):
         print(f"Failed to fetch top albums. errorcode: {albums}")
         return
 
-    if wants_albums:
-        comms.send_albums(albums, arduino)
+    comms.send_albums(albums, arduino)
 
 
 def test(p):
