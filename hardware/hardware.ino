@@ -59,6 +59,17 @@ int ascii_to_int(const char *array, size_t count) {
   return value;
 }
 
+/** converts a uint8_t to a char representaion of its bits
+  b is assumed to be 8 elements long at least
+*/
+void padded_itoa8(uint8_t number, char *b) {
+    for (int i = 7; i >= 0; i--) {
+        b[7 - i] = (number & (1 << i)) ? '1' : '0';
+    }
+    b[8] = '\0';
+}
+
+
 /**
   read top album data
   buffer: array of album structs
@@ -145,30 +156,9 @@ void show_empty()
   FastLED.show();
 }
 
-void loop()
+/** show a sequence of the top color of each album 4 colors at a time*/
+void show_2x2()
 {
-  static int have_albums = 0;
-  //TODO: should use serialevent
-  if (Serial.available()) {
-    char b = Serial.read();
-    if (b == 'f') {
-      drop_till_nextline();
-
-      int r = read_top_albums(topalbums, MAX_ALBUMS);
-      if (r == 0) have_albums = 1;
-      Serial.print("read returned ");
-      Serial.println(r);
-    } else {
-      Serial.print('r');
-    }
-  }
-
-  if (!have_albums) {
-    show_empty();
-    return;
-  }
-
-  // show a sequence of 2x2 tiles of the first color in each pallet
   for (int i = 0; i < MAX_ALBUMS; i += 4) {
     if (topalbums[i].scrobbles <= 0) break;
     fill_color(CRGB(
@@ -197,6 +187,62 @@ void loop()
     delay(500);
     FastLED.show();
   }
+}
+
+void show_lines()
+{
+  char b[8];
+  for (int j = 0; j < MAX_ALBUMS; j++) {
+    padded_itoa8(min(255, topalbums[j].scrobbles), b);
+
+    CRGB color = CRGB(topalbums[j].colors[0]
+                      , topalbums[j].colors[1]
+                      , topalbums[j].colors[2]);
+
+    for (int i = 0; i < 8; i++) {
+      if (b[i] == '1') leds[XYsafe(j % 8, i)] = color;
+    }
+
+    if ((j % 8) == 7) {
+      FastLED.show();
+      delay(2000);
+      fill_color(CRGB::Black,0,0,7,7);
+      if (topalbums[j].scrobbles == 0) break;
+    }
+  }
+}
+
+void loop()
+{
+  static int display_mode = 0;
+  //TODO: should use serialevent
+  if (Serial.available()) {
+    char b = Serial.read();
+    if (b == 'f') {
+      drop_till_nextline();
+      int r = read_top_albums(topalbums, MAX_ALBUMS);
+      if (r == 0) display_mode = 1;
+      Serial.print("read returned ");
+      Serial.println(r);
+    } else if (b == 'g') {
+      drop_till_nextline();
+      int r = read_top_albums(topalbums, MAX_ALBUMS);
+      if (r == 0) display_mode = 2;
+      Serial.print("read returned ");
+      Serial.println(r);
+    } else {
+      Serial.print('r');
+    }
+  }
+
+  if (!display_mode) {
+    show_empty();
+  } else if (display_mode == 1) {
+    show_2x2();
+  } else if (display_mode == 2) {
+    show_lines();
+  }
+
 }
 
 void setup() {

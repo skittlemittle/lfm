@@ -1,14 +1,18 @@
 # Serial communication protocol
 Arduino starts in a waiting state, to begin sending album data
-the computer first wakes the arduino up with `f\n`. If anything
-else is sent the arduino responds with `r`.
+the computer first wakes the arduino up with a wake command (`f\n` or `g\n`)
+If anything else is sent the arduino responds with `r`.
 
 ## Messages
 
 ```
-f\n : tell the arduino to start receiving album data
+f\n : tell the arduino to start receiving album data and then display it
+    as a "week chart"
 
-f\n : ACK to f\n from arduino to the computer
+g\n : tell the arduino to start receiving album data and then display it
+    as a "month chart"
+
+f\n : ACK to f\n or g\n from arduino to the computer
 
 r: response from arduino telling computer that the last
     message was invalid (ie it should send a f\n again)
@@ -66,7 +70,7 @@ album #: digits representing the index in the albums list to which the
 To finish sending albums the computer sends `e\n` which puts the arduino back
 into its waiting state.
 
-Sending `f\n` will clear any previous album data stored on the arduino
+Sending `f\n` or `g\n` will clear any previous album data stored on the arduino
 
 ```
 Sending album data:
@@ -74,6 +78,19 @@ Computer           Arduino
 ----------------------------
   |                waiting
   | -------f\n--->    |
+  | <------f\n---- indicate ready
+  |                   |
+  | ---album 1---> 
+  | <-- b | a#----   ACK
+  | ---album 2---> 
+  | <-- b | a#----   ACK
+  |     ...
+  | ---album n---> 
+  | <-- b | a#----   ACK
+  | ------e\n----> stop reading, go back to waiting
+  OR:
+  |                waiting
+  | -------g\n--->    |
   | <------f\n---- indicate ready
   |                   |
   | ---album 1---> 
