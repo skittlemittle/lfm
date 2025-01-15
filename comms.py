@@ -34,18 +34,23 @@ def parse_response(res, split = b'\r\n', filt = b'DEBUG:'):
     return [l for l in lines if l!= b'']
 
 
-def send_albums(albums, ser, verbose=False):
+sync_chars = {"week": b'f\n', "month": b'g\n'}
+
+
+def send_albums(albums, ser, chart_type, verbose=False):
     """
     albums: zip of (scrobbles, [colors])
             max 50 elements
     ser: seruial connection to use
+    chart_type: what kind of chart is this? "week" / "month".
+        This changes what the arduino displays the info as
     verbose: enable extra logs
     """
     if ser == None or albums == None:
         return 1
 
     while (True):
-        ser.write(b'f\n')
+        ser.write(sync_chars[chart_type])
         time.sleep(.5)
         # empty filt problem
         res = parse_response(ser.read(ser.in_waiting), filt=b'')
@@ -85,4 +90,10 @@ def send_albums(albums, ser, verbose=False):
     time.sleep(.5)
     res = parse_response(ser.read(ser.in_waiting), filt=b'')
     print("closer: ", res)
+
+    # useful when debugging
+#    while(True):
+#        res = parse_response(ser.read(ser.in_waiting), filt=b'')
+#        print(res)
+#        time.sleep(3)
 

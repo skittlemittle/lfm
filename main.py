@@ -18,7 +18,7 @@ parser.add_argument("--serial", type=str, const="", default="" , nargs="?"
                     ,help="specify a serial port to use")
 
 # ===============================================
-def top_albums(period="7day", limit=50):
+def top_albums(period="7day", limit=40):
     data = lastfm.get_top_albums(period, limit, endpoint_url)
     if data[1] != 200:
         return None
@@ -34,7 +34,7 @@ def top_albums(period="7day", limit=50):
     return ret
 
 
-def weeker(limit=50):
+def weeker(limit=40):
     data = lastfm.get_weekly_chart(endpoint_url)
     if data[1] != 200:
         return None
@@ -57,10 +57,19 @@ def connect_arduino(port):
     return comms.connect(arport)
 
 
-def main(testdata=None, overrideconnection=None):
+def main():
     args = parser.parse_args()
-    arduino = overrideconnection if overrideconnection else connect_arduino(args.serial)
-    albums = testdata
+    arduino = connect_arduino(args.serial)
+
+    def prepare_send(albums, chart_type):
+        if type(albums) == int:
+            print(f"Failed to fetch {chart_type} albums. errorcode: {albums}")
+            return None
+
+        def aux(arduino, verbose):
+            return comms.send_albums(albums, arduino, chart_type, verbose)
+        return aux
+
 
     import time
     time.sleep(5) # hilarious bug, gotta wait for the arduino to reset
@@ -69,33 +78,19 @@ def main(testdata=None, overrideconnection=None):
         print("Arduino not connected")
         return
 
-    if albums == None:
-        if args.chart[0] == "topweek":
-            albums = top_albums()
-        if args.chart[0] == "topmonth":
-            albums = top_albums("1month")
-        elif args.chart[0] == "weeker":
-            albums = weeker()
+    send = None
 
-    if type(albums) == int:
-        print(f"Failed to fetch top albums. errorcode: {albums}")
-        return
+    if args.chart[0] == "topweek":
+        send = prepare_send(top_albums(), "week")
+    elif args.chart[0] == "topmonth":
+        send = prepare_send(top_albums("1month"), "month")
+    elif args.chart[0] == "weeker":
+        send = prepare_send(weeker(), "week")
+    else:
+        print(f"{args.chart[0]} is not a valid chart")
 
-    comms.send_albums(albums, arduino, args.verbose)
-
-
-def test(p):
-    import json
-    with open("topalbums.json", mode="r") as f:
-        data = json.load(f)
-        urls = lastfm.extract_img_urls(data)
-
-        colors = [colorpallet.compute_pallet(url,2) for url in urls]
-        scrobbles = [int(album["playcount"]) for album in data["topalbums"]["album"]]
-       
-        ret = zip(scrobbles, colors)
-        arduino = comms.connect(p)
-        main(ret, arduino)
+    if send:
+        send(arduino, args.verbose)
 
 
 main()
