@@ -4,3 +4,5 @@ lastfmAPI.txt
 .venv
 .env
 *.json
+testdata
+*.zip
