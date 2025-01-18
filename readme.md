@@ -1,3 +1,26 @@
+# setup
+```
+$ python -m venv /path/to/dir
+$ cd /path/to/dir
+$ source dir/activate
+
+$ pip install -r requirements.txt
+
+# on raspbian you will need to get libopenjp2-7:
+$ apt-get install libopenjp2-7
+```
+
+Using:
+```
+python main.py [chart]
+```
+where chart is one of 'topweek' / 'topmonth' / 'weeker'
+
+To manually select a serial port
+```
+python main.py [chart] --serial /dev/YOURDEVICE
+```
+
 # Serial communication protocol
 Arduino starts in a waiting state, to begin sending album data
 the computer first wakes the arduino up with a wake command (`f\n` or `g\n`)

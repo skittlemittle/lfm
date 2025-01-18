@@ -8,6 +8,7 @@ import comms
 
 load_dotenv()
 endpoint_url = lastfm.make_url_params("scringly", os.getenv('LASTFM_API_KEY'))
+api_session = lastfm.create_api_session()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose", action="store_true"
@@ -19,7 +20,7 @@ parser.add_argument("--serial", type=str, const="", default="" , nargs="?"
 
 # ===============================================
 def top_albums(period="7day", limit=40):
-    data = lastfm.get_top_albums(period, limit, endpoint_url)
+    data = lastfm.get_top_albums(period, limit, endpoint_url, api_session)
     if data[1] != 200:
         return None
 
@@ -35,12 +36,12 @@ def top_albums(period="7day", limit=40):
 
 
 def weeker(limit=40):
-    data = lastfm.get_weekly_chart(endpoint_url)
+    data = lastfm.get_weekly_chart(endpoint_url, api_session)
     if data[1] != 200:
         return None
 
     data = data[0]
-    urls = lastfm.get_weekly_imgs(data, endpoint_url)[:limit]
+    urls = lastfm.get_weekly_imgs(data, endpoint_url, api_session)[:limit]
 
     colors = [colorpallet.compute_pallet(url) for url in urls]
     scrobbles = [int(album["playcount"]) for album in data["weeklyalbumchart"]["album"]][:limit]
