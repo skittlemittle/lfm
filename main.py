@@ -27,7 +27,7 @@ def top_albums(period="7day", limit=40):
     data = data[0]
     urls = lastfm.extract_img_urls(data)
 
-    colors = [colorpallet.compute_pallet(url) for url in urls]
+    colors = [colorpallet.compute_pallet(url, api_session) for url in urls]
     scrobbles = [int(album["playcount"]) for album in data["topalbums"]["album"]]
    
     ret = zip(scrobbles, colors)
@@ -43,7 +43,7 @@ def weeker(limit=40):
     data = data[0]
     urls = lastfm.get_weekly_imgs(data, endpoint_url, api_session)[:limit]
 
-    colors = [colorpallet.compute_pallet(url) for url in urls]
+    colors = [colorpallet.compute_pallet(url, api_session) for url in urls]
     scrobbles = [int(album["playcount"]) for album in data["weeklyalbumchart"]["album"]][:limit]
 
     ret = zip(scrobbles, colors)

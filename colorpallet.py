@@ -24,8 +24,13 @@ def _get_dominant_colors(pil_img, palette_size=16, num_colors=10):
     return dominant_colors
 
 
-def compute_pallet(img_url, num_colors=6):
-    res = requests.get(img_url ,stream=True).raw
+def compute_pallet(img_url, sesh, num_colors=6):
+    """
+    img_url: url to the image, can be jpeg whatever pillow can handle idk
+    sesh: requests Session for retries and such
+    num_colors: how many colors you want the pallet to have
+    """
+    res = sesh.get(img_url ,stream=True).raw
     im = Image.open(res).convert("RGB")
 
     # consider reducing pallet with .quantize

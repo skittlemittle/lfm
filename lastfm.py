@@ -72,7 +72,8 @@ def extract_img_urls(data, size=0):
     """
     urls = []
     for album in data["topalbums"]["album"]:
-        urls.append(album["image"][size]["#text"])
+        if album["image"][size]["#text"]:
+            urls.append(album["image"][size]["#text"])
 
     return urls
 
