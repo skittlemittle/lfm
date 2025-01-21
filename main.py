@@ -25,12 +25,25 @@ def top_albums(period="7day", limit=40):
         return None
 
     data = data[0]
-    urls = lastfm.extract_img_urls(data)
+    urls_scrobs = extract_urls_scrobbles(data)
 
-    colors = [colorpallet.compute_pallet(url, api_session) for url in urls]
-    scrobbles = [int(album["playcount"]) for album in data["topalbums"]["album"]]
+    colors = [colorpallet.compute_pallet(it[0], api_session) for it in urls_scrobs]
+    scrobbles = [it[1] for it in urls_scrobs] # grugbrain
    
-    ret = zip(scrobbles, colors)
+    return zip(scrobbles, colors)
+
+
+def extract_urls_scrobbles(data, size=0):
+    """
+    extracts the image urls and scrobbles from data returned from get_top_albums
+    size: select the target image size to extract
+        0: small, 1: medium
+    returns: [(url, scrobbles)]
+    """
+    ret = []
+    for album in data["topalbums"]["album"]:
+        if album["image"][size]["#text"]:
+            ret.append((album["image"][size]["#text"], int(album["playcount"])))
 
     return ret
 
@@ -41,14 +54,12 @@ def weeker(limit=40):
         return None
 
     data = data[0]
-    urls = lastfm.get_weekly_imgs(data, endpoint_url, api_session)[:limit]
+    urls_scrobs = lastfm.get_weekly_imgs(data, endpoint_url, api_session)[:limit]
 
-    colors = [colorpallet.compute_pallet(url, api_session) for url in urls]
-    scrobbles = [int(album["playcount"]) for album in data["weeklyalbumchart"]["album"]][:limit]
+    colors = [colorpallet.compute_pallet(it[0], api_session) for it in urls_scrobs]
+    scrobbles = [it[1] for it in urls_scrobs] # grugbrain
 
-    ret = zip(scrobbles, colors)
-
-    return ret
+    return zip(scrobbles, colors)
 
 
 def connect_arduino(port):

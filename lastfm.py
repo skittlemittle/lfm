@@ -48,36 +48,21 @@ def get_weekly_chart(url, sesh):
     
     return (data, res.status_code)
 
+
 def get_weekly_imgs(chart, url, sesh):
     """
-    Fetches the image url for each album in the weekly
-    chart
+    fetches the image url for each album in weeker
+    chart: data returned from get_weekly_chart
+    returns [(url, scrobbles)]
     """
-    urls = []
+    ret = []
     for album in chart["weeklyalbumchart"]["album"]:
         params = url(f'method=album.getinfo&mbid={album["mbid"]}')
         res = sesh.get(_endpoint+params)
         # ignoring failed reqs
         if (res.status_code == 200):
             data = json.loads(res.text)
-            urls.append(data["album"]["image"][0]["#text"])
+            ret.append((data["album"]["image"][0]["#text"]
+                        , int(album["playcount"])))
 
-    return urls
-
-def extract_img_urls(data, size=0):
-    """
-    extracts the image urls from data returned from get_top_albums
-    size: select the target image size to extract
-        0: small, 1: medium
-    """
-    urls = []
-    for album in data["topalbums"]["album"]:
-        if album["image"][size]["#text"]:
-            urls.append(album["image"][size]["#text"])
-
-    return urls
-
-
-
-#print(get_top_albums("7day",3,url))
-#print(get_weekly_chart(url))
+    return ret
