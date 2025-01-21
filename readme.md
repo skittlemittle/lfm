@@ -40,10 +40,9 @@ f\n : ACK to f\n or g\n from arduino to the computer
 r: response from arduino telling computer that the last
     message was invalid (ie it should send a f\n again)
 
-c\n : ask the arduino for a status check
+c\n : ask the arduino to set the led panel to all off
 
-c\n : response from arduino saying that its running
-    and has album data (OK)
+c\n : response from arduino ack'ing the clear request
 
 n\n : response from arduino saying that it needs
     album data
@@ -125,19 +124,12 @@ Computer           Arduino
   | <-- b | a#----   ACK
   | ------e\n----> stop reading, go back to waiting
 
-Status check:
+Clear panel:
 Computer           Arduino
 ----------------------------
-albums already sent:
   |                waiting
   | -------c\n--->    |
-  | <------c\n---- running OK
+  | <------c\n----   ACK
   |                   |
-
-albums not sent:
-  |                waiting
-  | -------c\n--->    |
-  | <------n\n---  running, pls send album data
-
 ```
 

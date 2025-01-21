@@ -184,7 +184,7 @@ void show_2x2()
       topalbums[i+3].colors[1],
       topalbums[i+3].colors[2]),
       4,4,7,7);
-    delay(500);
+    delay(1500);
     FastLED.show();
   }
 }
@@ -230,17 +230,28 @@ void loop()
       if (r == 0) display_mode = 2;
       Serial.print("read returned ");
       Serial.println(r);
+    } else if(b == 'c') {
+      drop_till_nextline();
+      display_mode = 3;
     } else {
       Serial.print('r');
     }
   }
 
+  if (display_mode) FastLED.setBrightness(BRIGHTNESS);
+
   if (!display_mode) {
+    FastLED.setBrightness( BRIGHTNESS / 2 );
     show_empty();
   } else if (display_mode == 1) {
     show_2x2();
   } else if (display_mode == 2) {
     show_lines();
+  } else if (display_mode == 3) {
+    fill_color(CRGB::Black,0,0,7,7);
+    delay(50);
+    FastLED.show();
+    Serial.println('c');
   }
 
 }

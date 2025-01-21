@@ -34,7 +34,21 @@ def parse_response(res, split = b'\r\n', filt = b'DEBUG:'):
     return [l for l in lines if l!= b'']
 
 
-sync_chars = {"week": b'f\n', "month": b'g\n'}
+sync_chars = {"week": b'f\n', "month": b'g\n', "clear": b'c\n'}
+
+
+def send_clearcmd(ser, verbose=False):
+    if ser == None:
+        return 1
+
+    while (True):
+        ser.write(sync_chars["clear"])
+        time.sleep(.5)
+        res = parse_response(ser.read(ser.in_waiting), filt=b'')
+        if verbose:
+            print(res)
+        if len(res) > 0 and res[0] == b'c':
+            break
 
 
 def send_albums(albums, ser, chart_type, verbose=False):

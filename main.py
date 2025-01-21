@@ -13,6 +13,8 @@ api_session = lastfm.create_api_session()
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", "--verbose", action="store_true"
                     , help="increase output verbosity")
+parser.add_argument("-c", "--clear", action="store_true"
+                    , help="set led panel to black")
 parser.add_argument("chart", type=str, nargs=1
                     ,help="the chart to fetch: topweek / topmonth/ weeker")
 parser.add_argument("--serial", type=str, const="", default="" , nargs="?"
@@ -88,6 +90,10 @@ def main():
 
     if not arduino:
         print("Arduino not connected")
+        return
+
+    if args.clear:
+        comms.send_clearcmd(arduino, args.verbose)
         return
 
     send = None
